@@ -1,16 +1,43 @@
-body div {
-	background-image: url("https://secure.gravatar.com/avatar/53c40df676c60a476861119ded359c03?d=https://a248.e.akamai.net/assets.github.com%2Fimages%2Fgravatars%2Fgravatar-140.png");
+body{
+	font-family: arial;
+	font-size:0.8em;
+}
+
+a{
+	text-decoration: none;
+	color: #FF33FF;
+}
+
+.event span {
+	font-weight:bold;
+}
+
+.detail {
+	margin-top: 10px;
+	padding-left: 50px;
 	background-repeat: no-repeat;
-	height: 80px;
-	padding-left: 85px;
-	background-size: 80px 80px;
+	background-size: 40px 40px;
+	min-height: 40px;
+	
 }
 
-body ul li img {
-	height: 80px;
-	width: 80px;
+.icon{
+	background-image: url("iconsprite.png");
+	background-repeat: no-repeat;
+	height: 22px;
+	width: 22px;
+	background-position: 0px 22px;
+	float: left;
+	padding: 0 0 0 0;
+	margin: 0 0 0 0;
 }
 
-body ul {
-	list-style-type: none;
+.event{
+	margin-left: 42px;
 }
+
+body div {
+	width: 75%;
+	padding-bottom: 15px;
+}
+
