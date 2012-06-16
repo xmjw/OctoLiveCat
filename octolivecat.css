@@ -1,0 +1,16 @@
+body div {
+	background-image: url("https://secure.gravatar.com/avatar/53c40df676c60a476861119ded359c03?d=https://a248.e.akamai.net/assets.github.com%2Fimages%2Fgravatars%2Fgravatar-140.png");
+	background-repeat: no-repeat;
+	height: 80px;
+	padding-left: 85px;
+	background-size: 80px 80px;
+}
+
+body ul li img {
+	height: 80px;
+	width: 80px;
+}
+
+body ul {
+	list-style-type: none;
+}
