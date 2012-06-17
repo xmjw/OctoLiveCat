@@ -74,6 +74,7 @@ function createActionTitle(who,did,what,whoLink,whatLink,when)
 	didText = document.createTextNode(did)
 	
 	span = document.createElement('span')
+	span.className = 'title'
 	
 	span.appendChild(whoTag)
 	span.appendChild(didText)	
@@ -159,6 +160,7 @@ function renderCreateEvent(val,item,icon,user)
 	icon.style.backgroundPosition = "0px 0px"
 	item.appendChild(createActionTitle(user.login," created ",val.repo.name,"http://github.com/"+user.login,"http://github.com/"+val.repo.name,val.created_at))
 	detail = createDetail(user)
+	detail.className = 'detail quote'
 	detail.appendChild(document.createTextNode(val.payload.description))
 	item.appendChild(detail)
 }
@@ -214,6 +216,7 @@ function renderGistEvent(val,item,icon,user)
 	if (desc == "") desc = 'No Description'
 	
 	span.appendChild(document.createTextNode(desc))
+	span.className = 'quote'
 	detail.appendChild(span)
 	item.appendChild(detail)
 }
