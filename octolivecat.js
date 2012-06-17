@@ -53,9 +53,19 @@ $.getJSON('https://api.github.com/events?callback=?', function(data) {
 
 function createActionTitle(who,did,what,whoLink,whatLink,when)
 {
-	whoTag = document.createElement('a')
-	whoTag.href = whoLink;
-	whoTag.appendChild(document.createTextNode(who))
+	whoTag = null;
+	if (who != null)
+	{
+		whoTag = document.createElement('a')
+		whoTag.href = whoLink;
+		whoTag.appendChild(document.createTextNode(who))
+	}
+	if (who == null)
+	{
+		whoTag = document.createElement('span')
+		whoTag.className = 'anonymous'
+		whoTag.appendChild(document.createTextNode('Anonymous user'))
+	}
 	
 	whatTag = document.createElement('a')
 	whatTag.href = whatLink;
@@ -81,21 +91,165 @@ function createDetail(user)
 	return d
 }
 
+function revealDetail(span,link)
+{
+	$('#'+span).slideDown('normal');
+	$('#'+link).hide();
+}
+
 function createCommitDetail(user,val)
 {
 	commits = createDetail(user)
+	span = null
 	for (var i = 0; i < val.payload.commits.length; i++) {
+		if (val.payload.commits.length > 3 && i == 2)
+		{
+			span = document.createElement('div')
+			span.id = val.payload.commits[i].sha.substring(0,10) //we can be lazy, as this is unique.
+			span.className = 'detail hidden'
+			commits.appendChild(span);
+
+			more = document.createElement('a')
+			more.appendChild(document.createTextNode((val.payload.commits.length-i)+' more'))
+			more.href = "javascript: revealDetail('"+val.payload.commits[i].sha.substring(0,10)+"','"+val.payload.commits[i].sha.substring(10,20)+"');";
+			more.id = val.payload.commits[i].sha.substring(10,20);
+			commits.appendChild(more)
+		}
+		
+		
 		commitLink = document.createElement('a')
-		commitLink.href = "http://github.com/"+val.repo.name+"commits"+val.payload.commits[i].sha
+		commitLink.href = "http://github.com/"+val.repo.name+"/commits/"+val.payload.commits[i].sha
 		commitLink.appendChild(document.createTextNode(val.payload.commits[i].sha.substring(0,7)))
 		
-		commits.appendChild(commitLink)
-	    commits.appendChild(document.createTextNode(" "+val.payload.commits[i].message))
-		commits.appendChild(document.createElement('br'))
+		if (val.payload.commits.length > 3 && i > 1)
+		{
+			span.appendChild(commitLink)
+	    	span.appendChild(document.createTextNode(" "+val.payload.commits[i].message))
+			span.appendChild(document.createElement('br'))
+		}
+		else
+		{
+			commits.appendChild(commitLink)
+	    	commits.appendChild(document.createTextNode(" "+val.payload.commits[i].message))
+			commits.appendChild(document.createElement('br'))
+		}
 	}
 	return commits
 }
 
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////
+/////////////////////////////////////////////////////////////////////////////////////////////////////////
+/////////////////////                                                               /////////////////////
+/////////////////////                             Renderes                          /////////////////////
+/////////////////////                                                               /////////////////////
+/////////////////////////////////////////////////////////////////////////////////////////////////////////
+/////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+function renderPushEvent(val,item,icon,user) 
+{
+	icon.style.backgroundPosition = "0px -22px"
+	item.appendChild(createActionTitle(user.login," pushed to ",val.repo.name,"http://github.com/"+user.login,"http://github.com/"+val.repo.name,val.created_at))
+	item.appendChild(createCommitDetail(user,val))	
+}
+
+function renderCreateEvent(val,item,icon,user) 
+{
+	icon.style.backgroundPosition = "0px 0px"
+	item.appendChild(createActionTitle(user.login," created ",val.repo.name,"http://github.com/"+user.login,"http://github.com/"+val.repo.name,val.created_at))
+	detail = createDetail(user)
+	detail.appendChild(document.createTextNode(val.payload.description))
+	item.appendChild(detail)
+}
+
+function renderFollowEvent(val,item,icon,user) 
+{
+	icon.style.backgroundPosition = "0px -198px"
+
+	item.appendChild(createActionTitle(user.login," followed ",val.payload.target.name,"http://github.com/"+user.login,"http://github.com/"+val.payload.target.name,val.created_at))
+
+	arrow = document.createElement('img')
+	arrow.className = 'arrow'
+	arrow.src = 'right.png'
+	
+	followed = document.createElement('img')
+	followed.src = val.payload.target.avatar_url
+	followed.className = 'avatar'
+	
+	detail = createDetail(user,val)
+	detail.appendChild(arrow)
+	detail.appendChild(followed)
+
+	item.appendChild(detail)
+}
+
+function renderGistEvent(val,item,icon,user) 
+{
+	icon.style.backgroundPosition = "0px -176px"
+
+	action = " did something to Gist "
+	switch(val.payload.action)
+	{
+		case "create":
+			action = " created Gist ";
+			break
+		case "update":
+			action = " updated Gist ";
+			break;
+		case "delete":
+			action = " deleted Gist ";
+			break;
+		default: console.log("Unhandled Gist Event: '"+val.payload.action+"'")
+			break;
+	}
+
+	item.appendChild(createActionTitle(user.login,action,val.payload.gist.id,"http://github.com/"+user.login,val.payload.gist.html_url,val.created_at))
+
+	detail = createDetail(user)
+	span = document.createElement('span')
+	span.className = 'quote'
+	
+	desc = val.payload.gist.description
+	if (desc == "") desc = 'No Description'
+	
+	span.appendChild(document.createTextNode(desc))
+	detail.appendChild(span)
+	item.appendChild(detail)
+}
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////
+/////////////////////////////////////////////////////////////////////////////////////////////////////////
+/////////////////////                                                               /////////////////////
+/////////////////////                      Unfinised Event Renderes                 /////////////////////
+/////////////////////                                                               /////////////////////
+/////////////////////////////////////////////////////////////////////////////////////////////////////////
+/////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+function renderDownloadEvent(val,item,icon,user) 
+{
+	icon.style.backgroundPosition = "0px -220px"
+
+	//Still haven't actually seen one of these. Need a test spec to help
+	title = document.createTextNode(user.login + ' downloaded '+val.payload.download.name)
+
+	desc = document.createTextNode(val.payload.download.description)
+	url = val.payload.download.html_url
+	content_type = val.payload.download.content_type
+		
+	item.appendChild(title)
+	item.appendChild(document.createElement('br'))
+	item.appendChild(desc)
+}
+
+function renderForkEvent(val,item,icon,user) 
+{
+	icon.style.backgroundPosition = "0px -242px"
+
+	user = document.createTextNode(user.login + ' forked')	
+	item.appendChild(user)
+	item.appendChild(document.createElement('br'))
+}
 
 function renderDeleteEvent(val,item,icon,user)
 {
@@ -131,49 +285,6 @@ function renderMemberEvent(val,item,icon,user)
 	
 }
 
-function renderDownloadEvent(val,item,icon,user) 
-{
-	icon.style.backgroundPosition = "0px -220px"
-
-	title = document.createTextNode(user.login + ' downloaded '+val.payload.download.name)
-
-	desc = document.createTextNode(val.payload.download.description)
-	url = val.payload.download.html_url
-	content_type = val.payload.download.content_type
-		
-	item.appendChild(title)
-	item.appendChild(document.createElement('br'))
-	item.appendChild(desc)
-}
-
-function renderFollowEvent(val,item,icon,user) 
-{
-	icon.style.backgroundPosition = "0px -198px"
-
-	user = document.createTextNode(user.login + ' followed')	
-	item.appendChild(user)
-	item.appendChild(document.createElement('br'))
-	
-}
-
-function renderForkEvent(val,item,icon,user) 
-{
-	icon.style.backgroundPosition = "0px -242px"
-
-	user = document.createTextNode(user.login + ' forked')	
-	item.appendChild(user)
-	item.appendChild(document.createElement('br'))
-}
-
-function renderGistEvent(val,item,icon,user) 
-{
-	icon.style.backgroundPosition = "0px -176px"
-
-	user = document.createTextNode(user.login + ' created gist')	
-	item.appendChild(user)
-	item.appendChild(document.createElement('br'))	
-}
-
 function renderWatchEvent(val,item,icon,user) 
 {
 	icon.style.backgroundPosition = "0px -220px"
@@ -200,25 +311,6 @@ function renderIssueCommentEvent(val,item,icon,user)
 	item.appendChild(user)
 	item.appendChild(document.createElement('br'))
 }  
-
-
-
-function renderPushEvent(val,item,icon,user) 
-{
-	icon.style.backgroundPosition = "0px -22px"
-	item.appendChild(createActionTitle(user.login," pushed to ",val.repo.name,"http://github.com/"+user.login,"http://github.com/"+val.repo.name,val.created_at))
-	item.appendChild(createCommitDetail(user,val))	
-}
-
-function renderCreateEvent(val,item,icon,user) 
-{
-	icon.style.backgroundPosition = "0px 0px"
-	item.appendChild(createActionTitle(user.login," created ",val.repo.name,"http://github.com/"+user.login,"http://github.com/"+val.repo.name,val.created_at))
-	//Append the description into a details seciton:
-	detail = createDetail(user)
-	detail.appendChild(document.createTextNode(val.payload.description))
-	item.appendChild(detail)
-}
 
 function renderGollumEvent(val,item,icon,user) 
 {
