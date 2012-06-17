@@ -1,4 +1,3 @@
-
 $.getJSON('https://api.github.com/events?callback=?', function(data) {
   var items = []
 
@@ -78,6 +77,45 @@ function createActionTitle(who,did,what,whoLink,whatLink,when)
 	
 	span.appendChild(whoTag)
 	span.appendChild(didText)	
+	span.appendChild(whatTag)
+	span.appendChild(document.createTextNode(", "+prettyDate(when)))
+	
+	return span
+}
+
+function createActionOnSomethingTitle(who,did,what,on,whoLink,whatLink,onLink,when)
+{
+	whoTag = null;
+	if (who != null)
+	{
+		whoTag = document.createElement('a')
+		whoTag.href = whoLink;
+		whoTag.appendChild(document.createTextNode(who))
+	}
+	if (who == null)
+	{
+		whoTag = document.createElement('span')
+		whoTag.className = 'anonymous'
+		whoTag.appendChild(document.createTextNode('Anonymous user'))
+	}
+	
+	whatTag = document.createElement('a')
+	whatTag.href = whatLink
+	whatTag.appendChild(document.createTextNode(what))
+	
+	didText = document.createTextNode(did)
+	
+	onTag = document.createElement('a')
+	onTag.href = onLink
+	onTag.appendChild(document.createTextNode(on))
+	
+	span = document.createElement('span')
+	span.className = 'title'
+	
+	span.appendChild(whoTag)
+	span.appendChild(didText)	
+	span.appendChild(onTag)
+	span.appendChild(document.createTextNode(' on '))
 	span.appendChild(whatTag)
 	span.appendChild(document.createTextNode(", "+prettyDate(when)))
 	
@@ -221,6 +259,48 @@ function renderGistEvent(val,item,icon,user)
 	item.appendChild(detail)
 }
 
+function renderWatchEvent(val,item,icon,user) 
+{
+	//These are very stream lined, the extra data is pointless...
+	icon.style.backgroundPosition = "0px -220px"
+	item.appendChild(createActionTitle(user.login," "+val.payload.action+" watching ",val.repo.name,"http://github.com/"+user.login,"http://github.com/"+val.repo.name,val.created_at))
+}
+
+function renderIssueEvent(val,item,icon,user) 
+{
+	icon.style.backgroundPosition = "0px -88px"
+    item.appendChild(createActionOnSomethingTitle(user.login," "+val.payload.action+" ",val.repo.name," issue "+val.payload.issue.number+" ","http://github.com/"+user.login,"http://github.com/"+val.repo.name,val.payload.issue.html_url,val.created_at))
+	
+	detail = createDetail(user)
+	span = document.createElement('span')
+	span.className = 'quote'
+	span.appendChild(document.createTextNode(val.payload.issue.body))
+	span.className = 'quote'
+	detail.appendChild(span)
+	item.appendChild(detail)
+}
+
+function renderIssueCommentEvent(val,item,icon,user)
+{
+	icon.style.backgroundPosition = "0px -66px"
+    item.appendChild(createActionOnSomethingTitle(user.login,
+	                                              " "+val.payload.action+" a ",
+	                                              "issue "+val.payload.issue.number,
+	                                              " comment ",
+	                                              "http://github.com/"+user.login,
+	                                              val.payload.issue.html_url,
+	                                              val.payload.issue.html_url+"#issuecomment-"+val.payload.comment.id,
+	                                              val.created_at))
+	
+	detail = createDetail(user)
+	span = document.createElement('span')
+	span.className = 'quote'
+	span.appendChild(document.createTextNode(val.payload.comment.body))
+	span.className = 'quote'
+	detail.appendChild(span)
+	item.appendChild(detail)
+}
+
 /////////////////////////////////////////////////////////////////////////////////////////////////////////
 /////////////////////////////////////////////////////////////////////////////////////////////////////////
 /////////////////////                                                               /////////////////////
@@ -288,32 +368,6 @@ function renderMemberEvent(val,item,icon,user)
 	
 }
 
-function renderWatchEvent(val,item,icon,user) 
-{
-	icon.style.backgroundPosition = "0px -220px"
-
-	user = document.createTextNode(user.login + ' watching')	
-	item.appendChild(user)
-	item.appendChild(document.createElement('br'))
-}
-
-function renderIssueEvent(val,item,icon,user) 
-{
-	icon.style.backgroundPosition = "0px -88px"
-
-	user = document.createTextNode(user.login + ' issue')	
-	item.appendChild(user)
-	item.appendChild(document.createElement('br'))
-}
-
-function renderIssueCommentEvent(val,item,icon,user)
-{
-	icon.style.backgroundPosition = "0px -66px"
-
-	user = document.createTextNode(user.login + ' commented')	
-	item.appendChild(user)
-	item.appendChild(document.createElement('br'))
-}  
 
 function renderGollumEvent(val,item,icon,user) 
 {
