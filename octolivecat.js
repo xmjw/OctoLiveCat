@@ -1,4 +1,6 @@
-$.getJSON('https://api.github.com/events?callback=?', function(data) {
+
+//This requires support for OAuth
+$.getJSON('https://api.github.com/users/xmjw/events?callback=?', function(data) {
   var items = []
 
   console.log(data)
