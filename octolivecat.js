@@ -7,6 +7,8 @@ $.getJSON('https://api.github.com/users/xmjw/events?callback=?', function(data) 
 
   data = data.data //get the payload.
 
+  console.log("check is data is empty?")
+  
   $.each(data, function(key, val) {
 
 	//Get the user/org who did something.
